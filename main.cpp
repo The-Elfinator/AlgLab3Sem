@@ -4,6 +4,12 @@ using namespace std;
 
 int INFINITIVE = INT_MAX;
 
+struct cmp {
+    bool operator() (const pair<int, int> a, const pair<int, int> b) const {
+        return a.second < b.second;
+    }
+};
+
 void dfs(int v, vector<bool> &used, vector<int> &top_sort, vector<vector<pair<int, int>>> &g) {
     used[v] = true;
     for (size_t i = 0; i < g[v].size(); i++) {
@@ -42,35 +48,20 @@ int main() {
     }
     vector<int> dist(n, INFINITIVE);
     dist[s] = 0;
-    queue<int> q;
-    vector<int> q1;
-    q.push(s);
-    while (!q.empty()) {
-        int v = q.front();
-        q.pop();
+    set<pair<int, int>, cmp> my_set;
+    my_set.insert(make_pair(s, position_in_top_sort[s]));
+    while (!my_set.empty()) {
+        pair<int, int> pair_v = *my_set.begin();
+        my_set.erase(pair_v);
+        int v = pair_v.first;
         for (const auto &pair: g[v]) {
             int to = pair.first;
             int w = pair.second;
             if (dist[to] > dist[v] + w) {
                 dist[to] = dist[v] + w;
-                q1.push_back(to);
+                my_set.insert(make_pair(to, position_in_top_sort[to]));
             }
         }
-        for (int i = 0; i < q1.size(); i++) {
-            int min_q1 = i;
-            for (int j = i+1; j < q1.size(); j++) {
-                if (position_in_top_sort[q1[j]] < position_in_top_sort[q1[min_q1]]) {
-                    min_q1 = j;
-                }
-            }
-            int c = q1[i];
-            q1[i] = q1[min_q1];
-            q1[min_q1] = c;
-        }
-        for (int & i : q1) {
-            q.push(i);
-        }
-        q1.clear();
     }
     if (dist[t] == INFINITIVE) {
         cout << "Unreachable" << '\n';
