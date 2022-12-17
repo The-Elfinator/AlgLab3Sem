@@ -2,71 +2,61 @@
 
 using namespace std;
 
-int INFINITIVE = INT_MAX;
+vector<vector<int>> g, g_transpose;
+vector<bool> used;
+vector<int> order, component;
 
-struct cmp {
-    bool operator() (const pair<int, int> a, const pair<int, int> b) const {
-        return a.second < b.second;
-    }
-};
-
-void dfs(int v, vector<bool> &used, vector<int> &top_sort, vector<vector<pair<int, int>>> &g) {
+void dfs1(int v) {
     used[v] = true;
-    for (size_t i = 0; i < g[v].size(); i++) {
-        int to = g[v][i].first;
+    for (int to : g[v]) {
         if (!used[to]) {
-            dfs(to, used, top_sort, g);
+            dfs1(to);
         }
     }
-    top_sort.push_back(v);
+    order.push_back(v);
+}
+
+void dfs2(int v, int k) {
+    used[v] = true;
+    component[v] = k;
+    for (int to : g_transpose[v]) {
+        if (!used[to]) {
+            dfs2(to, k);
+        }
+    }
 }
 
 int main() {
-    int n, m, s, t;
-    cin >> n >> m >> s >> t;
-    s--;
-    t--;
-    vector<vector<pair<int, int>>> g(n);
-    vector<bool> used(n, false);
+    int n, m;
+    cin >> n >> m;
+    g.assign(n, vector<int>());
+    g_transpose.assign(n, vector<int>());
     for (int i = 0; i < m; i++) {
-        int v, to, w;
-        cin >> v >> to >> w;
+        int v, to;
+        cin >> v >> to;
         v--;
         to--;
-        g[v].emplace_back(to, w);
+        g[v].push_back(to);
+        g_transpose[to].push_back(v);
     }
-    vector<int> top_sort;
-
+    used.assign(n, false);
     for (int i = 0; i < n; i++) {
-        if (!used[i])
-            dfs(i, used, top_sort, g);
-    }
-    reverse(top_sort.begin(), top_sort.end());
-    vector<int> position_in_top_sort(n);
-    for (int i = 0; i < n; i++) {
-        position_in_top_sort[top_sort[i]] = i;
-    }
-    vector<int> dist(n, INFINITIVE);
-    dist[s] = 0;
-    set<pair<int, int>, cmp> my_set;
-    my_set.insert(make_pair(s, position_in_top_sort[s]));
-    while (!my_set.empty()) {
-        pair<int, int> pair_v = *my_set.begin();
-        my_set.erase(pair_v);
-        int v = pair_v.first;
-        for (const auto &pair: g[v]) {
-            int to = pair.first;
-            int w = pair.second;
-            if (dist[to] > dist[v] + w) {
-                dist[to] = dist[v] + w;
-                my_set.insert(make_pair(to, position_in_top_sort[to]));
-            }
+        if (!used[i]) {
+            dfs1(i);
         }
     }
-    if (dist[t] == INFINITIVE) {
-        cout << "Unreachable" << '\n';
-    } else {
-        cout << dist[t] << '\n';
+    used.assign(n, false);
+    component.assign(n, 0);
+    int k = 0;
+    for (int i = 0; i < n; i++) {
+        int v = order[n-i-1];
+        if (!used[v]) {
+            dfs2(v, k);
+            k++;
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        cout << i+1 << ':' << component[i] << '\n';
     }
     return 0;
 }
