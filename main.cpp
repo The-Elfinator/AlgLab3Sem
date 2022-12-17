@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#define DEBUG false
 
 using namespace std;
 
@@ -24,6 +25,18 @@ void dfs2(int v, int k) {
             dfs2(to, k);
         }
     }
+}
+
+vector<int> set_deg_out(int n, int count_of_scc) {
+    vector<int> deg_out (count_of_scc, 0);
+    for (int v = 0; v < n; v++) {
+        for (int to : g[v]) {
+            if (component[v] != component[to]) {
+                deg_out[component[v]]++;
+            }
+        }
+    }
+    return deg_out;
 }
 
 int main() {
@@ -55,9 +68,27 @@ int main() {
             k++;
         }
     }
+    int count_of_scc = k+1;
+#if DEBUG
     for (int i = 0; i < n; i++) {
         cout << i+1 << ':' << component[i] << '\n';
     }
+#endif
+    vector<int> deg_out = set_deg_out(n, count_of_scc);
+
+    vector<bool> set_station (count_of_scc, false);
+    vector<int> stations;
+    for (int i = 0 ; i < n; i++) {
+        if (deg_out[component[i]] == 0 && !set_station[component[i]]) {
+            stations.push_back(i);
+            set_station[component[i]] = true;
+        }
+    }
+    cout << stations.size() << '\n';
+    for (int v : stations) {
+        cout << v+1 << ' ';
+    }
+    cout << '\n';
     return 0;
 }
 
