@@ -27,68 +27,96 @@ void dfs2(int v, int k) {
     }
 }
 
-vector<int> set_deg_out(int n, int count_of_scc) {
-    vector<int> deg_out (count_of_scc, 0);
-    for (int v = 0; v < n; v++) {
-        for (int to : g[v]) {
-            if (component[v] != component[to]) {
-                deg_out[component[v]]++;
-            }
-        }
-    }
-    return deg_out;
-}
 
 int main() {
     int n, m;
     cin >> n >> m;
-    g.assign(n, vector<int>());
-    g_transpose.assign(n, vector<int>());
-    for (int i = 0; i < m; i++) {
-        int v, to;
-        cin >> v >> to;
-        v--;
-        to--;
-        g[v].push_back(to);
-        g_transpose[to].push_back(v);
-    }
-    used.assign(n, false);
+    g.assign(2*n, vector<int>());
+    g_transpose.assign(2*n, vector<int>());
+    // i-th name has number 2*i for him and 2*i+1 for not him
+    map<string, int> names;
+    vector<string> names_in_order;
     for (int i = 0; i < n; i++) {
+        char name[10];
+        int num = i;
+        cin >> name;
+        names[name] = num;
+        names_in_order.emplace_back(name);
+    }
+    for (int i = 0; i < m; i++) {
+        string name1, impl, name2;
+        char sign1, sign2;
+        cin >> sign1 >> name1 >> impl >> sign2 >> name2;
+        int v1, to1;
+        int v2, to2;
+        if (sign1 == '-') {
+            v1 = names[name1]*2+1;
+            v2 = names[name1]*2;
+        } else {
+            v1 = names[name1]*2;
+            v2 = names[name1]*2+1;
+        }
+        if (sign2 == '-') {
+            to1 = names[name2]*2+1;
+            to2 = names[name2]*2;
+        } else {
+            to1 = names[name2]*2;
+            to2 = names[name2]*2+1;
+        }
+        // has edges v1 -> to1 and v2 -> to2
+        g[v1].push_back(to1);
+        g[to2].push_back(v2);
+        g_transpose[to1].push_back(v1);
+        g_transpose[v2].push_back(to2);
+    }
+
+    // find strongly connected components
+    used.assign(2*n, false);
+    for (int i = 0; i < 2*n; i++) {
         if (!used[i]) {
             dfs1(i);
         }
     }
-    used.assign(n, false);
-    component.assign(n, 0);
+
+    used.assign(2*n, false);
+    component.assign(2*n, 0);
     int k = 0;
-    for (int i = 0; i < n; i++) {
-        int v = order[n-i-1];
+    for (int i = 0; i < 2*n; i++) {
+        int v = order[2*n-i-1];
         if (!used[v]) {
-            dfs2(v, k);
+            dfs2(   v, k);
             k++;
         }
     }
-    int count_of_scc = k+1;
+    int count_of_scc = k-1;
+
 #if DEBUG
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < 2*n; i++) {
         cout << i+1 << ':' << component[i] << '\n';
     }
 #endif
-    vector<int> deg_out = set_deg_out(n, count_of_scc);
 
-    vector<bool> set_station (count_of_scc, false);
-    vector<int> stations;
-    for (int i = 0 ; i < n; i++) {
-        if (deg_out[component[i]] == 0 && !set_station[component[i]]) {
-            stations.push_back(i);
-            set_station[component[i]] = true;
+    bool has_solution = true;
+    for (int i = 0; i < n; i++) {
+        if (component[2*i] == component[2*i+1]) {
+            has_solution = false;
+            break;
         }
     }
-    cout << stations.size() << '\n';
-    for (int v : stations) {
-        cout << v+1 << ' ';
+    if (has_solution) {
+        vector<string> ans;
+        for (int i = 0; i < n; i++) {
+            if (component[2*i] > component[2*i+1]) {
+                ans.push_back(names_in_order[i]);
+            }
+        }
+        cout << ans.size() << '\n';
+        for (const string& name : ans) {
+            cout << name << '\n';
+        }
+    } else {
+        cout << -1 << '\n';
     }
-    cout << '\n';
     return 0;
 }
 
