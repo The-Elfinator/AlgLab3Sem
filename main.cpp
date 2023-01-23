@@ -2,63 +2,51 @@
 
 using namespace std;
 
-const int INF = INT_MAX;
+vector<int> Z_function(string s) {
+    int n = (int) s.length();
+    vector<int> z(n);
+    z[0] = n;
+    int left = 0, right = 0;
+    for (int i = 1; i < n; i++) {
+        if (i <= right) {
+            z[i] = min(right - i + 1, z[i - left]);
+        }
+        while (i + z[i] < n && s[z[i]] == s[i+z[i]]) {
+            z[i]++;
+        }
+        if (i + z[i] - 1 > right) {
+            left = i;
+            right = i + z[i] - 1;
+        }
+    }
+    return z;
+}
 
 int main() {
     // input
-    int n, m, k;
-    cin >> n >> k;
-    vector<int> exits;
-    for (int i = 0; i < k; i++) {
-        int x;
-        cin >> x;
-        x--;
-        exits.push_back(x);
-    }
-    cin >> m;
-    vector<vector<int>> g(n, vector<int>());
-    for (int i = 0; i < m; i++) {
-        int v, u;
-        cin >> v >> u;
-        v--;
-        u--;
-        g[v].push_back(u);
-        g[u].push_back(v);
-    }
+    string p, t;
+    cin >> p >> t;
 
     /*<=======================================================================================>*/
     // solution
-    queue<int> my_queue;
-    vector<int> dist(n, INF);
-    vector<int> nearest_exit(n, -1);
-    for (int e : exits) {
-        my_queue.push(e);
-        dist[e] = 0;
-        nearest_exit[e] = e;
-    }
-    while (!my_queue.empty()) {
-        int v = my_queue.front();
-        my_queue.pop();
-        for (int to : g[v]) {
-            if (dist[to] > dist[v] + 1) {
-                dist[to] = dist[v] + 1;
-                nearest_exit[to] = nearest_exit[v];
-                my_queue.push(to);
-            } else if (dist[to] == dist[v] + 1) {
-                nearest_exit[to] = min(nearest_exit[to], nearest_exit[v]);
-                my_queue.push(to);
-            }
+    string s = p + '$' + t;
+    int offset = (int) p.length();
+    vector<int> z = Z_function(s);
+    int cnt = 0;
+    vector<int> positions;
+    for (int i = 0; i < z.size(); i++) {
+        if (z[i] == offset) {
+            cnt++;
+            positions.push_back(i - offset);
         }
     }
+
     /*<=======================================================================================>*/
 
     // output
-    for (int x : dist) {
+    cout << cnt << '\n';
+    for (int x : positions) {
         cout << x << ' ';
-    }
-    cout << '\n';
-    for (int v : nearest_exit) {
-        cout << v + 1 << ' ';
     }
     cout << '\n';
     return 0;
