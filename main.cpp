@@ -2,67 +2,53 @@
 
 using namespace std;
 
-const int INFINITIVE = INT_MAX;
-const int EDGE_MIN_WEIGHT = -1000;
-
-int one_k_bfs(int n, int s, int t, int k, const vector<vector<pair<int, int>>> &g) {
-    vector<queue<int>> myQueue (k + 1);
-    myQueue[0].push(s);
-    vector<pair<int, int>> dist (n, make_pair(INFINITIVE, 0));
-    dist[s].first = 0;
-    vector<bool> used (n, false);
-    int index_nonEmpty_queue = 0;
-    int size_of_queue = 1;
-    while (size_of_queue > 0) {
-        while (myQueue[index_nonEmpty_queue % (k + 1)].empty()) {
-            index_nonEmpty_queue++;
+vector<int> Z_function(string s) {
+    int n = (int) s.length();
+    vector<int> z(n);
+    z[0] = n;
+    int left = 0, right = 0;
+    for (int i = 1; i < n; i++) {
+        if (i <= right) {
+            z[i] = min(right - i + 1, z[i - left]);
         }
-        int u = myQueue[index_nonEmpty_queue % (k + 1)].front();
-        myQueue[index_nonEmpty_queue % (k + 1)].pop();
-        size_of_queue--;
-        if (!used[u]) {
-            used[u] = true;
-            for (auto edge : g[u]) {
-                int v = edge.first;
-                int w = edge.second;
-                if (dist[u].first + dist[u].second * (EDGE_MIN_WEIGHT - 1) + w + (EDGE_MIN_WEIGHT - 1) < dist[v].first + dist[v].second * (EDGE_MIN_WEIGHT - 1)) {
-                    dist[v].first = dist[u].first + w;
-                    dist[v].second = dist[u].second + 1;
-                    myQueue[dist[v].first % (k + 1)].push(v);
-                    size_of_queue++;
-                }
-            }
+        while (i + z[i] < n && s[z[i]] == s[i+z[i]]) {
+            z[i]++;
+        }
+        if (i + z[i] - 1 > right) {
+            left = i;
+            right = i + z[i] - 1;
         }
     }
-    int res = dist[t].first + dist[t].second * (EDGE_MIN_WEIGHT - 1);
-    return res;
+    return z;
 }
 
 int main() {
-    int n, m, s, t;
-    int k = -2*EDGE_MIN_WEIGHT+1;
-    cin >> n >> m >> s >> t;
-    s--;
-    t--;
-    vector<vector<pair<int, int>>> g(n);
-    for (int i = 0; i < m; i++) {
-        int v, to, w;
-        cin >> v >> to >> w;
-        v--;
-        to--;
-        w = w - EDGE_MIN_WEIGHT + 1;
-        g[v].emplace_back(to, w);
-    }
-    int res = one_k_bfs(n, s, t, k, g);
+    // input
+    string p, t;
+    cin >> p >> t;
 
-    //TODO: stress-test with Ford-Bellman algorithm
-
-    if (res == INFINITIVE) {
-        cout << "Unreachable" << '\n';
-    } else {
-        cout << res << '\n';
+    /*<=======================================================================================>*/
+    // solution
+    string s = p + '$' + t;
+    int offset = (int) p.length();
+    vector<int> z = Z_function(s);
+    int cnt = 0;
+    vector<int> positions;
+    for (int i = 0; i < z.size(); i++) {
+        if (z[i] == offset) {
+            cnt++;
+            positions.push_back(i - offset);
+        }
     }
 
+    /*<=======================================================================================>*/
+
+    // output
+    cout << cnt << '\n';
+    for (int x : positions) {
+        cout << x << ' ';
+    }
+    cout << '\n';
     return 0;
 }
 
